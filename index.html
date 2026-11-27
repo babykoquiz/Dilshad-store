@@ -152,61 +152,54 @@ body {
       <a class="button" href="https://www.google.com/search?q=allah+wallpaper" target="_blank" rel="noopener">More Wallpapers</a>
     </section>
 
-        /* Visitor Form Design */
-.visitor-form {
-  margin-top: 30px;
-  padding: 22px;
-  background: rgba(240, 248, 240, 0.95);
-  border: 1px solid #c9dfca;
-  border-radius: 15px;
-}
+        
+ <section class="allah-section">
 
-.visitor-form h2 {
-  text-align: center;
-  color: #176b37;
-}
+   
+    <section class="visitor-form">
+      <h2>For 5% Discount, Leave a Message</h2>
+      <p style="text-align:center;">
+        আমাদের দোকান সম্পর্কে আপনার মতামত জানান।
+      </p>
 
-.visitor-form label {
-  display: block;
-  margin-top: 12px;
-  font-weight: 600;
-}
+      <form action="https://formspree.io/f/mljbvvpk" method="POST">
 
-.visitor-form input,
-.visitor-form select,
-.visitor-form textarea {
-  width: 100%;
-  padding: 12px;
-  margin-top: 5px;
-  border: 1px solid #b8c8b8;
-  border-radius: 8px;
-  font-size: 16px;
-  font-family: inherit;
-}
+        <label for="visitor_name">Your Name:</label>
+        <input type="text" id="visitor_name"
+          name="visitor_name" placeholder="Enter your name" required>
 
-.visitor-form textarea {
-  min-height: 100px;
-  resize: vertical;
-}
+        <label for="visitor_email">Email Address:</label>
+        <input type="email" id="visitor_email"
+          name="visitor_email" placeholder="Enter your email" required>
 
-.visitor-form button {
-  width: 100%;
-  margin-top: 18px;
-  padding: 13px;
-  border: none;
-  border-radius: 9px;
-  background: #176b37;
-  color: white;
-  font-size: 17px;
-  font-weight: bold;
-  cursor: pointer;
-}
+        <label for="gender">Gender:</label>
+        <select id="gender" name="gender" required>
+          <option value="">Select Gender</option>
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
+          <option value="Other">Other</option>
+        </select>
 
-.visitor-form button:hover {
-  background: #105329;
-}
+        <label for="visit_status">Have you visited our shop?</label>
+        <select id="visit_status" name="visit_status" required>
+          <option value="">Select an option</option>
+          <option value="Like this shop">Yes, I like this shop</option>
+          <option value="Not yet visited">Not yet visited</option>
+        </select>
 
-    <section class="allah-section">
+        <label for="country">Your Country:</label>
+        <input type="text" id="country"
+          name="country" placeholder="Enter your country" required>
+
+        <label for="message">Your Message:</label>
+        <textarea id="message" name="message"
+          placeholder="Write your message here..." required></textarea>
+
+        <button type="submit">Submit & Get 5% Discount</button>
+
+      </form>
+    </section>
+
       <h2>I LOVE ALLAH</h2>
       <img class="allah-image" src="Allah.jpg" alt="Allah wallpaper">
       <p>IF YOU WANT MORE WALLPAPER, GET FROM HERE</p>
