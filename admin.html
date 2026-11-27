@@ -1,1 +1,313 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dilshad Store - Admin Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f3f5f9;color:#222}
+header{background:#172554;color:white;padding:20px;text-align:center}
+main{max-width:1050px;margin:25px auto;padding:15px}
+.card{background:white;padding:22px;border-radius:12px;margin-bottom:18px;box-shadow:0 3px 12px #0000000d}
+h2{margin-top:0;color:#172554}
+input{width:100%;padding:12px;margin:8px 0 14px;border:1px solid #ccd2dc;border-radius:7px;font-size:15px}
+button{padding:11px 16px;border:0;border-radius:7px;background:#1d4ed8;color:white;cursor:pointer;margin:4px}
+button.secondary{background:#64748b}
+button.danger{background:#dc2626}
+button:disabled{opacity:.5;cursor:not-allowed}
+.small{color:#64748b;font-size:13px}
+#message{padding:12px;border-radius:7px;margin:12px 0;display:none;background:#e0f2fe}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.stat{background:#eff6ff;padding:18px;border-radius:9px;text-align:center}
+.stat strong{display:block;font-size:25px;color:#1d4ed8;margin-top:8px}
+table{width:100%;border-collapse:collapse;min-width:650px}
+th,td{text-align:left;padding:11px;border-bottom:1px solid #e5e7eb;font-size:14px}
+th{background:#eff6ff}
+.table-wrap{overflow-x:auto}
+.hidden{display:none!important}
+#dashboard{display:none}
+@media(max-width:600px){.stats{grid-template-columns:1fr}.card{padding:15px}header{padding:15px}}
+</style>
+</head>
+<body>
+
+<header>
+<h1>Dilshad Store</h1>
+<p>Store Admin Dashboard</p>
+</header>
+
+<main>
+
+<div id="message"></div>
+
+<section id="authCard" class="card">
+<h2>Admin Login</h2>
+<p class="small">Only authorized store administrators can access this dashboard.</p>
+
+<div id="loginBox">
+<label>Email Address</label>
+<input type="email" id="email" placeholder="Enter admin email">
+<label>Password</label>
+<input type="password" id="password" placeholder="Enter password">
+<button id="loginBtn" onclick="login()">Login</button>
+<button class="secondary" onclick="sendReset()">Forgot Password?</button>
+</div>
+
+<div id="resetBox" class="hidden">
+<h3>Set a New Password</h3>
+<p class="small">Enter a new password for your admin account.</p>
+<input type="password" id="newPassword" placeholder="New password (minimum 8 characters)">
+<button onclick="saveNewPassword()">Save New Password</button>
+</div>
+</section>
+
+<section id="dashboard">
+<div class="card">
+<h2>Welcome, Dilshad!</h2>
+<button class="secondary" onclick="loadDashboard()">Refresh Data</button>
+<button class="danger" onclick="logout()">Logout</button>
+</div>
+
+<div class="card">
+<h2>Store Statistics</h2>
+<div class="stats">
+<div class="stat">Total Visitors<strong id="visitorCount">0</strong></div>
+<div class="stat">Total Vouchers<strong id="voucherCount">0</strong></div>
+<div class="stat">Active Vouchers<strong id="activeCount">0</strong></div>
+</div>
+</div>
+
+<div class="card">
+<h2>Visitor Information</h2>
+<div class="table-wrap">
+<table>
+<thead><tr>
+<th>Name</th><th>Email</th><th>Gender</th><th>Visit Status</th><th>Country</th><th>Message</th>
+</tr></thead>
+<tbody id="visitorRows"></tbody>
+</table>
+</div>
+</div>
+
+<div class="card">
+<h2>Voucher Management</h2>
+<div class="table-wrap">
+<table>
+<thead><tr>
+<th>Voucher Code</th><th>Discount</th><th>Expiry Date</th><th>Status</th><th>Action</th>
+</tr></thead>
+<tbody id="voucherRows"></tbody>
+</table>
+</div>
+</div>
+</section>
+
+</main>
+
+<script>
+const SUPABASE_URL = "https://rphzwgvuufgsqywtjaet.supabase.co";
+const SUPABASE_KEY = "sb_publishable_kKQnI8XElAU3_QpWQg48nA_RtFh26Bt";
+
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const messageBox = document.getElementById("message");
+
+function showMessage(text) {
+  messageBox.textContent = text;
+  messageBox.style.display = "block";
+}
+
+function clearMessage() {
+  messageBox.style.display = "none";
+}
+
+function showLogin() {
+  document.getElementById("authCard").style.display = "block";
+  document.getElementById("dashboard").style.display = "none";
+}
+
+function showDashboard() {
+  document.getElementById("authCard").style.display = "none";
+  document.getElementById("dashboard").style.display = "block";
+  loadDashboard();
+}
+
+async function login() {
+  clearMessage();
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+
+  if (!email || !password) {
+    showMessage("Please enter your email and password.");
+    return;
+  }
+
+  document.getElementById("loginBtn").disabled = true;
+
+  const { error } = await db.auth.signInWithPassword({ email, password });
+
+  document.getElementById("loginBtn").disabled = false;
+
+  if (error) {
+    showMessage(error.message);
+    return;
+  }
+
+  const { data } = await db.auth.getSession();
+  if (data.session) showDashboard();
+}
+
+async function sendReset() {
+  clearMessage();
+  const email = document.getElementById("email").value.trim();
+
+  if (!email) {
+    showMessage("Enter your admin email first.");
+    return;
+  }
+
+  const redirectTo = window.location.origin + window.location.pathname;
+
+  const { error } = await db.auth.resetPasswordForEmail(email, {
+    redirectTo
+  });
+
+  if (error) {
+    showMessage(error.message);
+  } else {
+    showMessage("Password reset link sent. Please check your email inbox.");
+  }
+}
+
+async function saveNewPassword() {
+  clearMessage();
+  const password = document.getElementById("newPassword").value;
+
+  if (password.length < 8) {
+    showMessage("Password must be at least 8 characters.");
+    return;
+  }
+
+  const { error } = await db.auth.updateUser({ password });
+
+  if (error) {
+    showMessage(error.message);
+  } else {
+    document.getElementById("resetBox").classList.add("hidden");
+    document.getElementById("loginBox").classList.remove("hidden");
+    showMessage("Password updated successfully. You can now log in.");
+  }
+}
+
+async function logout() {
+  await db.auth.signOut();
+  showLogin();
+  showMessage("You have logged out.");
+}
+
+function safe(value) {
+  return String(value ?? "").replace(/[&<>"']/g, char => ({
+    "&":"&amp;", "<":"&lt;", ">":"&gt;",
+    '"':"&quot;", "'":"&#39;"
+  })[char]);
+}
+
+async function loadDashboard() {
+  clearMessage();
+
+  const { data: visitors, error: visitorError } = await db
+    .from("visitors")
+    .select("id,visitor_name,visitor_email,gender,visit_status,country,message,created_at")
+    .order("created_at", { ascending: false });
+
+  if (visitorError) {
+    showMessage("Could not load visitors: " + visitorError.message);
+    return;
+  }
+
+  const { data: vouchers, error: voucherError } = await db
+    .from("vouchers")
+    .select("id,code,discount_type,discount_value,expiry_date,is_active,created_at")
+    .order("created_at", { ascending: false });
+
+  if (voucherError) {
+    showMessage("Could not load vouchers: " + voucherError.message);
+    return;
+  }
+
+  document.getElementById("visitorCount").textContent = visitors.length;
+  document.getElementById("voucherCount").textContent = vouchers.length;
+  document.getElementById("activeCount").textContent =
+    vouchers.filter(v => v.is_active).length;
+
+  document.getElementById("visitorRows").innerHTML = visitors.map(v => `
+    <tr>
+      <td>${safe(v.visitor_name)}</td>
+      <td>${safe(v.visitor_email)}</td>
+      <td>${safe(v.gender)}</td>
+      <td>${safe(v.visit_status)}</td>
+      <td>${safe(v.country)}</td>
+      <td>${safe(v.message)}</td>
+    </tr>
+  `).join("") || '<tr><td colspan="6">No visitors found.</td></tr>';
+
+  document.getElementById("voucherRows").innerHTML = vouchers.map(v => `
+    <tr>
+      <td>${safe(v.code)}</td>
+      <td>${safe(v.discount_value)}% </td>
+      <td>${v.expiry_date ? safe(new Date(v.expiry_date).toLocaleDateString()) : "No expiry"}</td>
+      <td>${v.is_active ? "Active" : "Inactive"}</td>
+      <td>
+        <button onclick="toggleVoucher(${Number(v.id)}, ${!v.is_active})">
+          ${v.is_active ? "Deactivate" : "Activate"}
+        </button>
+      </td>
+    </tr>
+  `).join("") || '<tr><td colspan="5">No vouchers found.</td></tr>';
+}
+
+async function toggleVoucher(id, active) {
+  const { error } = await db
+    .from("vouchers")
+    .update({ is_active: active })
+    .eq("id", id);
+
+  if (error) {
+    showMessage("Could not update voucher: " + error.message);
+    return;
+  }
+
+  showMessage("Voucher status updated.");
+  loadDashboard();
+}
+
+db.auth.onAuthStateChange((event, session) => {
+  if (event === "PASSWORD_RECOVERY") {
+    document.getElementById("authCard").style.display = "block";
+    document.getElementById("dashboard").style.display = "none";
+    document.getElementById("loginBox").classList.add("hidden");
+    document.getElementById("resetBox").classList.remove("hidden");
+    showMessage("Please create your new password.");
+  } else if (session && event === "SIGNED_IN") {
+    showDashboard();
+  } else if (!session && event === "SIGNED_OUT") {
+    showLogin();
+  }
+});
+
+(async function start() {
+  const { data } = await db.auth.getSession();
+
+  if (data.session) {
+    showDashboard();
+  } else {
+    showLogin();
+  }
+})();
+</script>
+
+</body>
+</html>
